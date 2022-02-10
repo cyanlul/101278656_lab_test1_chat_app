@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Chat App</title>
+</head>
+
+<body>
+    <h1>Chat Room</h1>
+    <label>Chat rooms avaliable:</label>
+    <select name="room" id="room">
+        <option value="news">news</option>
+        <option value="covid19">covid19</option>
+        <option value="nodeJS">nodeJS</option>
+    </select>
+    <button onclick="joinRoom()">
+        Join Room!
+    </button>
+    <hr />
+    <input type="text" placeholder="Enter message" name="message" id="message" required />
+    <button onclick="sendMessage()">
+        Send Message!
+    </button>
+    <hr />
+    <h3>Chat History</h3>
+    <hr />
+    <div id="messages"></div>
+    <hr />
+    <form action="/logout">
+        <button type="">
+            Logout
+        </button>
+    </form>
+</body>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    const client = io()
+
+    username = getCookie('username')
+
+    client.on('Welcome', (message) => {
+        addMessage(message)
+    })
+
+    function joinRoom() {
+        var roomName = document.getElementById('room').value
+        client.emit('join', roomName, username)
+        document.getElementById('messages').innerHTML = ''
+        addMessage(`${username} has joined the ${roomName} room successfully`)
+    }
+
+    client.on('newMessage', (msg) => {
+        const data = `<b>${msg.sender}:</b> ${msg.message}`
+        addMessage(data)
+    })
+
+    function sendMessage() {
+        var message = document.getElementById('message').value
+        var roomName = document.getElementById('room').value
+
+        msg = {
+            room: roomName,
+            message: document.getElementById('message').value,
+            username: username
+        }
+        client.emit('room_messages', msg)
+        addMessage(`${username}: ${currentMsg}`)
+        client.emit('message', msg)
+    }
+
+    function addMessage(message) {
+        document.getElementById('messages').innerHTML += '<div>' + message + '</div>'
+    }
+
+
+    function getCookie(cookieName) {
+        let name = cookieName + "=";
+        let decodedCookie = decodeURIComponent(document.cookie);
+        let ca = decodedCookie.split(';');
+        for (let i = 0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) == ' ') {
+                c = c.substring(1);
+            }
+            if (c.indexOf(name) == 0) {
+                return c.substring(name.length, c.length);
+            }
+        }
+        return "";
+    }
+</script>
+
+</html>
